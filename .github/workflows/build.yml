@@ -1,0 +1,79 @@
+name: Build Desktop
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: windows-latest
+            platform: windows
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Get short SHA
+        id: vars
+        shell: bash
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Build (Linux)
+        if: matrix.platform == 'linux'
+        run: npx electron-builder --linux AppImage --publish never
+
+      - name: Build (Windows)
+        if: matrix.platform == 'windows'
+        run: npx electron-builder --win portable --publish never
+
+      - name: List dist
+        shell: bash
+        run: ls -la dist/ || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: voicemod-${{ matrix.platform }}-${{ steps.vars.outputs.sha_short }}
+          path: |
+            dist/*.exe
+            dist/*.AppImage
+            dist/*.deb
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Publish to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: desktop-${{ steps.vars.outputs.sha_short }}
+          name: "VoiceMod Desktop · ${{ steps.vars.outputs.sha_short }}"
+          body: |
+            Готовые файлы для скачивания:
+            
+            **Windows:** `VoiceMod-Windows.exe` — скачай и запусти (портативная версия, установка не нужна)
+            
+            **Linux:** `VoiceMod-Linux.AppImage` — сделай `chmod +x` и запускай
+            
+            Не требует установки. Просто открывает веб-панель в отдельном окне.
+          files: |
+            dist/*.exe
+            dist/*.AppImage
+          draft: false
+          prerelease: false
+          make_latest: false

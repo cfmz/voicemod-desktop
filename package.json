@@ -1,0 +1,42 @@
+{
+  "name": "voicemod-desktop",
+  "version": "1.0.0",
+  "description": "VoiceMod Archive — desktop app",
+  "main": "main.js",
+  "author": "cfmz",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.cfmz.voicemod",
+    "productName": "VoiceMod",
+    "asar": true,
+    "files": ["main.js", "preload.js", "package.json"],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "win": {
+      "target": ["portable"],
+      "icon": "build/icon.png",
+      "artifactName": "VoiceMod-Windows-${version}.exe"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "build/icon.png",
+      "category": "Network",
+      "artifactName": "VoiceMod-Linux-${version}.${ext}"
+    },
+    "mac": {
+      "target": ["dmg"],
+      "icon": "build/icon.png",
+      "artifactName": "VoiceMod-macOS-${version}.dmg"
+    }
+  }
+}
